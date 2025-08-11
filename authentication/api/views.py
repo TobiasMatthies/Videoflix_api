@@ -5,7 +5,9 @@ from django.contrib.auth.tokens import default_token_generator
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from .serializers import RegistrationSerializer
+from rest_framework import status
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import RegistrationSerializer, CustomTokenObtainPairSerializer
 from core.settings import DEFAULT_FROM_EMAIL
 import django_rq
 
@@ -22,7 +24,7 @@ def send_activation_email(user_id, token):
             "Welcome to Videoflix",
             f"""Thank you for registering. Please confirm your email address.
                 Activate your account by clicking the link below:
-                http://localhost:8000/api/activate/{uid}/{token}
+                http://127.0.0.1:5500/pages/auth/activate.html?uid={uid}&token={token}
             """,
             DEFAULT_FROM_EMAIL,
             [user.email]
@@ -69,3 +71,35 @@ class ActivateAPIView(APIView):
 
         except (User.DoesNotExist, ValueError, TypeError, OverflowError):
             return Response({"error": "Invalid activation link."}, status=400)
+
+
+class LoginAPIView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        refresh = serializer.validated_data["refresh"]
+        access = serializer.validated_data.get("access")
+
+        response = Response({"message": "success"}, status=status.HTTP_200_OK)
+
+        response.set_cookie(
+            key="access_token",
+            value=str(access),
+            httponly=True,
+            secure=True,
+            samesite="Lax"
+        )
+
+        response.set_cookie(
+            key="refresh_token",
+            value=str(refresh),
+            httponly=True,
+            secure=True,
+            samesite="Lax"
+        )
+
+        response.data = {"detail": "Login successful", "user": serializer.validated_data["user"]}
+        return response
