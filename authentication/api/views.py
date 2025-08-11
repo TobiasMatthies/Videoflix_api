@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegistrationSerializer, CustomTokenObtainPairSerializer
 from core.settings import DEFAULT_FROM_EMAIL
 import django_rq
@@ -103,3 +104,13 @@ class LoginAPIView(TokenObtainPairView):
 
         response.data = {"detail": "Login successful", "user": serializer.validated_data["user"]}
         return response
+
+
+class LogoutAPIView(APIView):
+    #Todo: add permission class to check if refresh token is sent
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get("refresh_token")
+        if refresh_token:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        return Response({"detail": "Logout successful! All tokens will be deleted. Refresh token is now invalid."}, status=200)
