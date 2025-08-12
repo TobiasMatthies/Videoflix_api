@@ -1,5 +1,4 @@
-from django.core.mail import send_mail
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework.views import APIView
@@ -8,30 +7,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
 from .serializers import RegistrationSerializer, CustomTokenObtainPairSerializer
-from core.settings import DEFAULT_FROM_EMAIL
 import django_rq
-
-
-def send_activation_email(user_id, token):
-    """
-    Sends the activation email to the user in a background task.
-    """
-    try:
-        user = User.objects.get(pk=user_id)
-        uid = urlsafe_base64_encode(str(user.pk).encode('utf-8'))
-
-        send_mail(
-            "Welcome to Videoflix",
-            f"""Thank you for registering. Please confirm your email address.
-                Activate your account by clicking the link below:
-                http://127.0.0.1:5500/pages/auth/activate.html?uid={uid}&token={token}
-            """,
-            DEFAULT_FROM_EMAIL,
-            [user.email]
-        )
-    except User.DoesNotExist:
-        print(f"Attempted to send activation email for non-existent user ID: {user_id}")
+from . utils import send_activation_email
 
 
 class RegisterAPIView(APIView):
@@ -107,10 +86,42 @@ class LoginAPIView(TokenObtainPairView):
 
 
 class LogoutAPIView(APIView):
-    #Todo: add permission class to check if refresh token is sent
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
         if refresh_token:
             token = RefreshToken(refresh_token)
             token.blacklist()
-        return Response({"detail": "Logout successful! All tokens will be deleted. Refresh token is now invalid."}, status=200)
+            response = Response({"detail": "Logout successful! All tokens will be deleted. Refresh token is now invalid."}, status=200)
+            response.delete_cookie("access_token")
+            response.delete_cookie("refresh_token")
+            return response
+
+        return Response({"detail": "No refresh token provided."}, status=400)
+
+
+class TokenRefreshAPIView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get("refresh_token")
+
+        if refresh_token is None:
+            return Response({"error": "Refresh token not found in cookies"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.get_serializer(data={"refresh": refresh_token})
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        access_token = serializer.validated_data["access"]
+        response = Response()
+
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=True,
+            samesite="Lax"
+        )
+
+        return Response({"detail": "Token refreshed", "acces": access_token}, status=status.HTTP_200_OK)
