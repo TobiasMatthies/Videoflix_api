@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from .serializers import RegistrationSerializer, CustomTokenObtainPairSerializer
 import django_rq
-from . utils import send_activation_email
+from . utils import send_activation_email, send_password_reset_email
 
 
 class RegisterAPIView(APIView):
@@ -125,3 +125,14 @@ class TokenRefreshAPIView(TokenRefreshView):
         )
 
         return Response({"detail": "Token refreshed", "acces": access_token}, status=status.HTTP_200_OK)
+
+
+class PasswordResetAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        email = request.data.get("email")
+        user = User.objects.get(email=email)
+        token = default_token_generator.make_token(user)
+
+        if user:
+            django_rq.enqueue(send_password_reset_email, user.id, token)
+        return Response({"detail": "Password reset functionality not implemented yet."}, status=status.HTTP_200_OK)
