@@ -135,4 +135,25 @@ class PasswordResetAPIView(APIView):
 
         if user:
             django_rq.enqueue(send_password_reset_email, user.id, token)
-        return Response({"detail": "Password reset functionality not implemented yet."}, status=status.HTTP_200_OK)
+        return Response({"detail": "An email has been sent to reset your password."}, status=status.HTTP_200_OK)
+
+
+class PasswordConfirmAPIView(APIView):
+    def post(self, request, uid, token):
+        new_password = request.data.get("new_password")
+        confirm_password = request.data.get("confirm_password")
+
+        if (not new_password or not confirm_password) or new_password != confirm_password:
+            return Response({"detail": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_id = urlsafe_base64_decode(uid).decode('utf-8')
+        user = User.objects.get(pk=user_id)
+
+        if default_token_generator.check_token(user, token):
+            print(f"setting password for user {user}")
+            user.set_password(new_password)
+            print(f"new password: {new_password}")
+            user.save()
+            return Response({"message": "Account successfully activated."}, status=200)
+        else:
+            return Response({"error": "Invalid or expired link."}, status=400)
