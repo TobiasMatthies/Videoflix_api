@@ -1,65 +1,38 @@
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:latest
+    container_name: videoflix_database
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_HOST_AUTH_METHOD: md5
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - videoflix_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} -h localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-    restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes
+    image: redis:latest
+    container_name: videoflix_redis
     volumes:
       - redis_data:/data
-    networks:
-      - videoflix_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    restart: unless-stopped
 
   web:
     build:
       context: .
       dockerfile: backend.Dockerfile
-    ports:
-      - "8000:8000"
+    env_file: .env
+    container_name: videoflix_backend
+
     volumes:
       - .:/app
+      - videoflix_media:/app/media
+      - videoflix_static:/app/static
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    env_file:
-      - .env
-    networks:
-      - videoflix_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/admin/"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    restart: unless-stopped
+      - db
+      - redis
 
   mailhog:
     image: mailhog/mailhog
@@ -67,32 +40,10 @@ services:
     ports:
       - "8025:8025"   # Web UI
       - "1025:1025"   # SMTP
-    networks:
-      - videoflix_network
-    restart: unless-stopped
-
-  worker:
-    build:
-      context: .
-      dockerfile: backend.Dockerfile
-    command: python manage.py rqworker default
-    volumes:
-      - .:/app
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    env_file:
-      - .env
-    networks:
-      - videoflix_network
     restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
-
-networks:
-  videoflix_network:
-    driver: bridge
+  videoflix_media:
+  videoflix_static:
