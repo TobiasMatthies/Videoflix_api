@@ -24,8 +24,8 @@ services:
 
     volumes:
       - .:/app
-      - videoflix_media:/app/media
-      - videoflix_static:/app/static
+      - ./media:/app/media
+      - ./static:/app/static
     ports:
       - "8000:8000"
     environment:
@@ -45,5 +45,5 @@ services:
 volumes:
   postgres_data:
   redis_data:
-  videoflix_media:
-  videoflix_static:
+  videoflix_media: {}
+  videoflix_static: {}
