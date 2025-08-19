@@ -22,6 +22,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('authentication.api.urls')),
+    path('django-rq/', include('django_rq.urls'))
 ]
 
 if settings.DEBUG:
