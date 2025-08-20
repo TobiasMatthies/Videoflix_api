@@ -11,3 +11,10 @@ def convert_video(source, resolution):
     run = subprocess.run(cmd, capture_output=True, shell=True)
     print(run.stdout)
     print(run.stderr)
+
+    hls_file_name = f"hls_{file_name}_{resolution}.m3u8"
+    hls_file_path = os.path.join(file_dir, hls_file_name)
+    hls_file_cmd = f"ffmpeg -i '{new_file_path}' -codec: copy -start_number 0 -hls_time 10 -hls_list_size 0 -f hls '{hls_file_path}'"
+    hls_run = subprocess.run(hls_file_cmd, capture_output=True, shell=True)
+    print(hls_run.stdout)
+    print(hls_run.stderr)
