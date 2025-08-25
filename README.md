@@ -18,7 +18,12 @@ These instructions will get you a copy of the project up and running on your loc
     git clone https://github.com/your-username/videoflix-api.git
     cd videoflix-api
     ```
-2.  **Build and run the containers:**
+2.  **Set up the environment file:**
+    Create a `.env` file by copying the template and fill in your details.
+    ```bash
+    cp env.template .env
+    ```
+3.  **Build and run the containers:**
     ```bash
     docker-compose up --build
     ```
