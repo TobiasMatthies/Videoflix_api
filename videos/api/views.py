@@ -18,6 +18,7 @@ class VideoPlaybackAPIView(APIView):
     permission_classes = [IsAuthenticatedFromCookie]
 
     def get(self, request, *args, **kwargs):
+        print("Received request for video playback")
         movie_id = kwargs.get('movie_id')
         resolution = kwargs.get('resolution')
         file_name = kwargs.get('file_name')

@@ -20,9 +20,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    path('api/', include('videos.api.urls')),
     path('admin/', admin.site.urls),
     path('api/', include('authentication.api.urls')),
-    path('api/', include('videos.api.urls')),
     path('django-rq/', include('django_rq.urls'))
 ]
 
