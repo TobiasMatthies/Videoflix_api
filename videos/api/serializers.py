@@ -1,9 +1,12 @@
 from rest_framework import serializers
 from videos.models import Video
+from videos.models import Category
 
 
 class VideoSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField()
+    category = serializers.StringRelatedField()
+
     class Meta:
         model = Video
         fields = ["id", "created_at", "title", "description", "thumbnail_url", "category"]
