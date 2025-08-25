@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class RegistrationSerializer(serializers.ModelSerializer):
+    """Serializer for user registration."""
     confirmed_password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -30,6 +31,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Custom serializer for obtaining JWT tokens."""
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 

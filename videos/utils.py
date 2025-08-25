@@ -6,6 +6,7 @@ import os
 
 
 def convert_video(source, resolution):
+    """Converts a video file to mp4 and hls formats."""
     file_dir = os.path.dirname(source)
     file_name, file_ext = os.path.splitext(os.path.basename(source))
     new_file_name = f"{file_name}_{resolution}p.mp4"
@@ -27,6 +28,7 @@ def convert_video(source, resolution):
 
 
 def get_video_file(movie_id, **kwargs):
+    """Returns a video file for streaming."""
     resolution = kwargs.get("resolution")
     segment = kwargs.get("segment")
 

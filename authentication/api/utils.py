@@ -25,6 +25,7 @@ def send_activation_email(user_id, token):
 
 
 def send_password_reset_email(user_id, token):
+    """Sends a password reset email to the user."""
     try:
         user = User.objects.get(pk=user_id)
         uid = urlsafe_base64_encode(str(user.pk).encode('utf-8'))

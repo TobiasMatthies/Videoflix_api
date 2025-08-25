@@ -7,6 +7,7 @@ import os
 
 @receiver(post_save, sender=Video)
 def video_post_save(sender, instance, created, **kwargs):
+    """Converts the video to different resolutions after it is saved."""
     print("video saved")
     if created:
        print("converting...")
@@ -17,6 +18,7 @@ def video_post_save(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Video)
 def video_post_delete(sender, instance: Video, **kwargs):
+    """Deletes the video file and its converted versions when the video object is deleted."""
     if instance.video_file and os.path.isfile(instance.video_file.path):
         video_path = instance.video_file.path
         video_dir = os.path.dirname(video_path)

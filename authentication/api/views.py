@@ -14,6 +14,7 @@ from . utils import send_activation_email, send_password_reset_email
 
 
 class RegisterAPIView(APIView):
+    """View for user registration."""
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -32,6 +33,7 @@ class RegisterAPIView(APIView):
 
 
 class ActivateAPIView(APIView):
+    """View to activate a user's account."""
     permission_classes = [AllowAny]
 
     def get(self, request, uid, token):
@@ -54,6 +56,7 @@ class ActivateAPIView(APIView):
 
 
 class LoginAPIView(TokenObtainPairView):
+    """View for user login."""
     serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
@@ -86,6 +89,7 @@ class LoginAPIView(TokenObtainPairView):
 
 
 class LogoutAPIView(APIView):
+    """View for user logout."""
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
         if refresh_token:
@@ -100,6 +104,7 @@ class LogoutAPIView(APIView):
 
 
 class TokenRefreshAPIView(TokenRefreshView):
+    """View to refresh JWT tokens."""
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
 
@@ -128,6 +133,7 @@ class TokenRefreshAPIView(TokenRefreshView):
 
 
 class PasswordResetAPIView(APIView):
+    """View to request a password reset."""
     def post(self, request, *args, **kwargs):
         email = request.data.get("email")
         user = User.objects.get(email=email)
@@ -139,6 +145,7 @@ class PasswordResetAPIView(APIView):
 
 
 class PasswordConfirmAPIView(APIView):
+    """View to confirm a password reset."""
     def post(self, request, uid, token):
         new_password = request.data.get("new_password")
         confirm_password = request.data.get("confirm_password")
